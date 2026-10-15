@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ArrowUpRight, Check, Loader2, Mail } from "lucide-react";
+import { joinWaitlist } from "@/app/actions/waitlist";
 
 export type WaitlistRole = "investor" | "founder";
 
@@ -15,8 +16,9 @@ export default function WaitlistForm({ initialRole = "investor" }: WaitlistFormP
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedMessage, setSubmittedMessage] = useState(successMessage);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
@@ -24,19 +26,38 @@ export default function WaitlistForm({ initialRole = "investor" }: WaitlistFormP
       setIsSubmitted(false);
       return;
     }
+
     setError("");
     setIsSubmitting(true);
-    window.setTimeout(() => {
-      setIsSubmitting(false);
+
+    try {
+      const response = await joinWaitlist({
+        email: trimmedEmail,
+        role,
+      });
+
+      if (!response.success) {
+        setError(response.error);
+        setIsSubmitted(false);
+        return;
+      }
+
+      setSubmittedMessage(response.message ?? successMessage);
       setIsSubmitted(true);
-    }, 850);
+    } catch (submissionError) {
+      console.error("Waitlist submission failed", submissionError);
+      setError("We couldn't add you to the priority list. Please try again.");
+      setIsSubmitted(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <div id="waitlist" className="max-w-xl">
       <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"><span className="h-px w-7 bg-emerald-400" />Join the private beta</div>
       {isSubmitted ? (
-        <div className="flex min-h-[78px] items-center gap-3 rounded-xl border border-emerald-400/25 bg-emerald-400/8 px-4 text-sm text-emerald-100 shadow-[0_0_36px_rgba(52,211,153,0.08)]"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-slate-950"><Check size={16} strokeWidth={3} /></span><span>{successMessage}</span></div>
+        <div className="flex min-h-[78px] items-center gap-3 rounded-xl border border-emerald-400/25 bg-emerald-400/8 px-4 text-sm text-emerald-100 shadow-[0_0_36px_rgba(52,211,153,0.08)]"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-slate-950"><Check size={16} strokeWidth={3} /></span><span>{submittedMessage}</span></div>
       ) : (
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-3 grid grid-cols-2 gap-1 rounded-lg border border-white/10 bg-slate-900/70 p-1">
