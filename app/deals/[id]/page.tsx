@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Bookmark, ExternalLink, FileText, Globe, Lock, ShieldCheck } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
-import { saveToPipeline } from "@/app/actions/pipeline";
+import SaveToPipelineForm from "@/components/deals/save-to-pipeline-form";
 import { AuthShell } from "@/components/auth/auth-shell";
 import ContactButton from "@/components/deals/contact-button";
 import { TeaserHeader, TeaserMetrics } from "@/components/deals/deal-deck";
@@ -92,10 +92,7 @@ export default async function DealPage({ params }: PageProps<"/deals/[id]">) {
           saved ? (
             <p className="mt-6 flex items-center gap-2 text-xs text-emerald-300"><Bookmark size={14} />Saved to your pipeline · <Link href="/pipeline" className="underline underline-offset-4">View pipeline</Link></p>
           ) : (
-            <form action={saveToPipeline} className="mt-6">
-              <input type="hidden" name="startupId" value={deal.id} />
-              <button type="submit" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 px-4 text-xs font-semibold text-slate-200 transition-colors hover:border-emerald-400/40 hover:text-emerald-300"><Bookmark size={14} />Save to pipeline</button>
-            </form>
+            <SaveToPipelineForm startupId={deal.id} />
           )
         )}
         {!isInvestor && saved && <p className="mt-6 flex items-center gap-2 text-xs text-emerald-300"><Bookmark size={14} />Saved to your flagged deals</p>}

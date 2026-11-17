@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getProfile } from "@/lib/auth";
 import { founderProfileSchema, getCompleteness, getCredentials, type FounderProfileField, type ProfileStatus } from "@/lib/founder-profile";
+import { screenFounderProfile } from "@/lib/screening-server";
 import { createClient } from "@/lib/supabase/server";
 
 export type SaveFounderProfileResult =
@@ -71,6 +72,8 @@ export async function saveFounderProfile(input: unknown, intent: unknown): Promi
     console.error("Founder profile save error:", error);
     return { success: false, error: error.message };
   }
+
+  if (submitting) await screenFounderProfile({ userId: user.id, email: user.email ?? profile.email ?? null, headline: values.headline, bio: values.bio, links: [{ label: "LinkedIn", url: values.linkedinUrl }, { label: "GitHub", url: values.githubUrl }, { label: "Portfolio", url: values.portfolioUrl }] });
 
   const { error: profileError } = await supabase.from("profiles").update({ full_name: values.fullName || null }).eq("id", user.id);
   if (profileError) console.error("Profile name update error:", profileError);

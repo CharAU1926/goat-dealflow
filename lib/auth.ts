@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { isClosedBeta } from "@/lib/waitlist";
 
 export const USER_ROLES = ["founder", "investor"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
@@ -42,6 +43,15 @@ export async function getOrigin() {
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "localhost:3000";
   const protocol = headerList.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   return `${protocol}://${host}`;
+}
+
+/** WL-3: during the closed beta only invited, waitlisted emails and existing accounts may sign in. */
+export async function canAccessBeta(supabase: SupabaseClient, email: string | null | undefined) {
+  if (!isClosedBeta()) return true;
+  if (!email) return false;
+  const { data, error } = await supabase.rpc("can_access_beta", { p_email: email });
+  if (error) console.error("Beta gate check failed:", error);
+  return data === true;
 }
 
 export async function getProfile(supabase: SupabaseClient, userId: string) {

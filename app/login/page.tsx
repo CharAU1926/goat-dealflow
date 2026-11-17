@@ -3,12 +3,14 @@ import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth/auth-shell";
 import LoginForm from "@/components/auth/login-form";
 import { destinationForRole, getProfile, safeNextPath } from "@/lib/auth";
+import { CLOSED_BETA_MESSAGE } from "@/lib/waitlist";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Sign in | GOAT" };
 
 const errorMessages: Record<string, string> = {
   link: "That sign-in link is invalid or has expired. Request a new one below.",
+  beta: CLOSED_BETA_MESSAGE,
   auth: "We couldn't sign you in. Please try again.",
 };
 

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ExternalLink, FileSearch, Loader2, Pencil, X } from "lucide-react";
+import { AlertTriangle, Check, ExternalLink, FileSearch, Loader2, Pencil, X } from "lucide-react";
 import { getEvidenceSignedUrl, reviewFounderAction, reviewInvestorAction, reviewStartupAction } from "@/app/actions/operator";
+import { SCREENING_FLAG_LABELS, type ScreeningFlag } from "@/lib/screening";
 import { REASON_CODES, type ReviewAction, type ReviewActionResult, type ReviewTarget } from "@/lib/operator";
 
 export type InvestorQueueItem = {
@@ -29,6 +30,7 @@ export type FounderQueueItem = {
   companyTypeLabel: string;
   linkedinUrl: string | null;
   submittedAt: string | null;
+  flags: ScreeningFlag[];
 };
 
 export type StartupQueueItem = {
@@ -42,6 +44,7 @@ export type StartupQueueItem = {
   evidenceLabel: string;
   evidenceFilePath: string | null;
   submittedAt: string | null;
+  flags: ScreeningFlag[];
 };
 
 const cardClass = "rounded-2xl border border-white/10 bg-slate-900 p-5 sm:p-6";
@@ -112,6 +115,7 @@ export function FounderCard({ item }: { item: FounderQueueItem }) {
   return (
     <article className={cardClass}>
       <CardHeader name={item.name} email={item.email} badge={item.companyTypeLabel} submittedAt={item.submittedAt} />
+      <ScreeningFlags flags={item.flags} />
       <p className="mt-5 text-sm font-medium text-slate-200">{item.headline}</p>
       <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-400">{item.bio}</p>
       <div className="mt-4 flex flex-wrap gap-2">{item.skills.map((skill) => <span key={skill} className="rounded-md bg-white/6 px-2.5 py-1 text-xs text-slate-300">{skill}</span>)}</div>
@@ -125,6 +129,7 @@ export function StartupCard({ item }: { item: StartupQueueItem }) {
   return (
     <article className={cardClass}>
       <CardHeader name={item.name} email={`${item.founderName} · ${item.founderEmail}`} badge={item.companyTypeLabel} submittedAt={item.submittedAt} />
+      <ScreeningFlags flags={item.flags} />
       <p className="mt-5 text-sm leading-6 text-slate-300">{item.oneLiner}</p>
       <dl className="mt-5 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
         {item.details.map(([label, value]) => <Detail key={label} label={label}>{value}</Detail>)}
@@ -133,6 +138,21 @@ export function StartupCard({ item }: { item: StartupQueueItem }) {
       <div className="-mt-3"><EvidenceInspector filePath={item.evidenceFilePath} emptyMessage="No document was uploaded with this submission." /></div>
       <ReviewControls target="startup" approveLabel="Approve Startup" allowReject onDecide={(action, reasonCode) => reviewStartupAction({ startupId: item.startupId, action, reasonCode })} />
     </article>
+  );
+}
+
+// PR-3: automated screening results, shown as warnings so the operator knows where to look first.
+function ScreeningFlags({ flags }: { flags: ScreeningFlag[] }) {
+  if (flags.length === 0) return null;
+  return (
+    <div role="group" aria-label="Automated screening flags" className="mt-4 rounded-xl border border-amber-300/25 bg-amber-300/5 p-3">
+      <div className="flex flex-wrap gap-2">
+        {[...new Set(flags.map((flag) => flag.code))].map((code) => (
+          <span key={code} className="inline-flex items-center gap-1.5 rounded-md border border-amber-300/40 bg-amber-300/15 px-2 py-1 text-[11px] font-semibold text-amber-100"><AlertTriangle size={12} aria-hidden />[{SCREENING_FLAG_LABELS[code]}]</span>
+        ))}
+      </div>
+      <ul className="mt-2 space-y-1 text-xs leading-5 text-amber-100/80">{flags.map((flag) => <li key={`${flag.code}-${flag.detail}`}>{flag.detail}</li>)}</ul>
+    </div>
   );
 }
 

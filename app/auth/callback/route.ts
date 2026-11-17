@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
-import { consumeAuthIntent, destinationForRole, syncProfile } from "@/lib/auth";
+import { canAccessBeta, consumeAuthIntent, destinationForRole, syncProfile } from "@/lib/auth";
 import { saveDeal } from "@/lib/deals";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,6 +26,13 @@ export async function GET(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return loginError("auth");
+
+  // WL-3: Google sign-in cannot be checked up front, so a non-invited user is signed back out here.
+  if (!(await canAccessBeta(supabase, user.email))) {
+    await supabase.auth.signOut();
+    await consumeAuthIntent();
+    return loginError("beta");
+  }
 
   const intent = await consumeAuthIntent();
   const profile = await syncProfile(supabase, user, intent);

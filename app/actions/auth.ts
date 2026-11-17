@@ -3,7 +3,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { CONSENT_VERSION, USER_ROLES, consumeAuthIntent, destinationForRole, getOrigin, getProfile, safeNextPath, setAuthIntent } from "@/lib/auth";
+import { CLOSED_BETA_MESSAGE } from "@/lib/waitlist";
+import { CONSENT_VERSION, canAccessBeta, USER_ROLES, consumeAuthIntent, destinationForRole, getOrigin, getProfile, safeNextPath, setAuthIntent } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,9 +37,11 @@ export async function requestMagicLink(input: unknown): Promise<AuthActionResult
     return { success: false, error: "Too many sign-in links requested. Please wait a few minutes and try again.", retryAfter: blocked.retryAfter };
   }
 
+  const supabase = await createClient();
+  if (!(await canAccessBeta(supabase, email))) return { success: false, error: CLOSED_BETA_MESSAGE };
+
   await setAuthIntent({ marketingOptIn, next: safeNextPath(next), flag });
 
-  const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: `${await getOrigin()}/auth/callback` },

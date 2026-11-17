@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Slider } from "@base-ui/react/slider";
 import { Check, CircleCheck, Loader2, Plus, Send, X } from "lucide-react";
 import { saveFounderProfile } from "@/app/actions/founder";
+import { notifyMeaningfulAction } from "@/lib/pwa";
 import {
   BIO_MIN_LENGTH,
   COMMITMENTS,
@@ -87,6 +88,7 @@ export default function FounderProfileForm({ initialValues, initialStatus, email
       setFieldErrors({});
       setStatus(response.status);
       setNotice(response.status === "pending_review" ? "Profile submitted. It is now in review." : "Draft saved.");
+      if (intent === "submit") notifyMeaningfulAction(); // PRD v1.6 §7: offer install after a submission.
     } catch (submissionError) {
       console.error("Founder profile save failed", submissionError);
       setError("We couldn't save your profile. Please try again.");

@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import PwaInstallPrompt from "@/components/pwa-install-prompt";
+import PwaRegister from "@/components/pwa-register";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,6 +17,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "GOAT | European Venture Deal Flow",
   description: "Curated European deal flow for high-conviction investors and ambitious founders.",
+  applicationName: "Khora Flow",
+  icons: { apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "KhoraFlow", statusBarStyle: "black-translucent" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#020617",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -23,7 +32,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">{children}
+        <PwaRegister />
+        <PwaInstallPrompt />
+      </body>
     </html>
   );
 }

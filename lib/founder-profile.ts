@@ -143,6 +143,7 @@ export type CofounderProfileRow = {
   visibility_status: ProfileStatus;
   reviewer_notes: string | null;
   submitted_at: string | null;
+  screening_flags?: unknown;
 };
 
 const includes = <T extends string>(options: readonly T[], value: string | null): value is T => value !== null && (options as readonly string[]).includes(value);
